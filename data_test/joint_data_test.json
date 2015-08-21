@@ -1,0 +1,15 @@
+{
+	"trunk":[70,20,0],
+	"neck":[20,0,0],
+	"leg_R":[70,1],
+	"leg_L":[75,1],
+	"shoulder_R":[55,15,0,0],
+	"shoulder_L":[0,0,0,0],
+	"elbow_R":[40,0],
+	"elbow_L":[70,0],
+	"wrist_R":[5,0,0],
+	"wrist_L":[5,0,0],
+	"load":0,
+	"static":0,
+	"high_dynamic":1
+}
