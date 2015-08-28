@@ -99,6 +99,7 @@ class Assessment(object):
             ######### SHOULDERS ##########
             # flexion/extension
             shoulder = np.maximum(np.absolute(data["shoulder_R"]),np.absolute(data["shoulder_L"]))
+            elbows = np.maximum(np.absolute(data["elbow_R"]),np.absolute(data["elbow_L"]))
             if shoulder[0] < 20 + epsilon:
                 shoulders_score += 1
             elif shoulder[0] < 45 + epsilon:
@@ -108,14 +109,13 @@ class Assessment(object):
             else:
                 shoulders_score += 4
             # abduction/rotation
-            if shoulder[1] > epsilon or shoulder[2] > epsilon:
+            if shoulder[1] > epsilon or shoulder[2] > epsilon or elbows[1] > epsilon:
                 shoulders_score += 1
             # shoulder raised
             if shoulder[3]:
                 shoulders_score += 1
             ########## ELBOWS ############
             # flexion/etension
-            elbows = np.maximum(np.absolute(data["elbow_R"]),np.absolute(data["elbow_L"]))
             if elbows[0] > 60 - epsilon and elbows[0] < 100 + epsilon:
                 elbows_score += 1
             else:
