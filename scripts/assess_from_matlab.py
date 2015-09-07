@@ -5,7 +5,7 @@ import sys
 
 if __name__ == '__main__':
     # path variables
-    dropbox_path = '/home/buschbapti/Dropbox/'
+    dropbox_path = sys.argv[1]
     file_path = 'Inria_TUDa_human_comfort/20150904_partial_kinect_skeleton_fromVREP/func_python_bridge/interface_files/'
     file_name = 'HumanKinematic.json'
     # full path to kinematic file
