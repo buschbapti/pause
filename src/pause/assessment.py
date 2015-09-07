@@ -111,9 +111,6 @@ class Assessment(object):
             # abduction/rotation
             if shoulder[1] > epsilon or shoulder[2] > epsilon or elbows[1] > epsilon:
                 shoulders_score += 1
-            # shoulder raised
-            if shoulder[3]:
-                shoulders_score += 1
             ########## ELBOWS ############
             # flexion/etension
             if elbows[0] > 60 - epsilon and elbows[0] < 100 + epsilon:
