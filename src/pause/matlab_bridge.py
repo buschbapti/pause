@@ -1,11 +1,7 @@
 import numpy as np
 from pause import skeleton_to_joints
-import json
 
-def read_human_kinematic(filename):
-    # read json file
-    with open(filename) as data_file:
-        matlab_data = json.load(data_file)
+def read_human_kinematic(matlab_data):
     # dict of correspondance notation
     matlab_dict = {}
     matlab_dict['shoulderCenter'] = 'shoulder_C'
