@@ -1,5 +1,6 @@
 import numpy as np
 from collections import deque
+import json
 
 class Assessment(object):
     def __init__(self,window_size):
@@ -41,6 +42,15 @@ class Assessment(object):
 
     def eval_score(self):
         return np.sum(self.window_score)/len(self.window_score)
+
+    def save_log(self, score, group):
+        # read the json file score
+        with open('/tmp/pause_log.json') as data_file:
+            log_data = json.load(data_file)
+        # append the score
+        log_data[group] = score
+        with open('/tmp/pause_log.json', 'w') as outfile:
+            json.dump(log_data, outfile, indent=4, sort_keys=True)
 
     def reba_assess(self,data,epsilon=5):
         # group A score calculation (trunk,neck,legs)
@@ -89,6 +99,13 @@ class Assessment(object):
                 score += 1
             elif data["load"] > 10:
                 score += 2
+            # write the log
+            log_score = {}
+            log_score["trunk"] = trunk_score
+            log_score["neck"] = neck_score
+            log_score["legs"] = legs_score
+            log_score["A_score"] = score
+            self.save_log(log_score,'groupA')
             # return the score
             return score
         # group B score calculation (shoulders,elbows,wrists)
@@ -129,6 +146,14 @@ class Assessment(object):
                 wrists_score += 1
             # return the score
             score = self.reba_B_table[elbows_score-1,shoulders_score-1,wrists_score-1]
+            # write the log
+            log_score = {}
+            log_score["shoulders"] = shoulders_score
+            log_score["elbows"] = elbows_score
+            log_score["wrists"] = wrists_score
+            log_score["B_score"] = score
+            self.save_log(log_score,'groupB')
+            # return the score
             return score
         # first get A and B score
         A_score = get_A_score()
@@ -138,6 +163,8 @@ class Assessment(object):
         # add activity score
         if data["static"] or data["high_dynamic"]:
             reba_score += 1
+        # save the log
+        self.save_log(reba_score,"REBA")
         # return reba score
         return reba_score
 

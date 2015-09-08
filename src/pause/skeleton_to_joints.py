@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import json
 
 EPSILON = 10e-5
 
@@ -176,9 +177,9 @@ def calculate_shoulder_angles(S_T_K, K_E, shoulder="left"):
         flex = 0.0
     else:
         if shoulder == "left":
-            flex = math.atan2(S_E[1],-S_E[2])
-        else:
             flex = math.atan2(-S_E[1],-S_E[2])
+        else:
+            flex = math.atan2(S_E[1],-S_E[2])
     # calculate the abduction (atan2(x/-z))
     if S_E[0] == 0 and S_E[2] == 0:
         abd = 0.0
@@ -223,6 +224,13 @@ def calculate_trunk_angles(T_T_K, K_SC):
     # calculate the deviation (atan2(x/z))
     bend = math.atan2(T_SC[0],T_SC[2])
     return [rad_to_deg(flex),rad_to_deg(bend),0.]
+
+def save_log(skel_data, joints_data):
+    log_data = {}
+    log_data["skeleton"] = skel_data
+    log_data["angles"] = joints_data
+    with open('/tmp/pause_log.json', 'w') as outfile:
+        json.dump(log_data, outfile, indent=4, sort_keys=True)
 
 def convert_skel_to_joints(skel_data):
     joints_data = {}
@@ -274,4 +282,7 @@ def convert_skel_to_joints(skel_data):
     joints_data["load"] = 0
     joints_data["static"] = 0
     joints_data["high_dynamic"] = 0 
+
+    # save the log file
+    save_log(skel_data,joints_data)
     return joints_data
