@@ -30,8 +30,6 @@ def read_human_kinematic(filename):
     skel_data['hip_C'] = value
     skel_data['hip_L'] = value
     skel_data['hip_R'] = value
-    # move the shoulder center 10 cm up
-    skel_data['shoulder_C'][2] += 10
     # get the angles from the skeleton
     reba_data = skeleton_to_joints.convert_skel_to_joints(skel_data)
     # put fake values for the fake angles
