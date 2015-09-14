@@ -15,17 +15,17 @@ def read_human_kinematic(matlab_data):
     for joint in matlab_data:
         joint_name = matlab_dict[joint['name']]
         joint_pos = joint['xyz']
-        skel_data[joint_name] = joint_pos
+        skel_data[joint_name]['position'] = joint_pos
     # appened fake values for the res of the body
     value = [0,0,0]
-    skel_data['head'] = value
-    skel_data['elbow_L'] = value
-    skel_data['wrist_L'] = value
-    skel_data['hand_L'] = value
-    skel_data['spine'] = value
-    skel_data['hip_C'] = value
-    skel_data['hip_L'] = value
-    skel_data['hip_R'] = value
+    skel_data['head']['position'] = value
+    skel_data['elbow_L']['position'] = value
+    skel_data['wrist_L']['position'] = value
+    skel_data['hand_L']['position'] = value
+    skel_data['spine']['position'] = value
+    skel_data['hip_C']['position'] = value
+    skel_data['hip_L']['position'] = value
+    skel_data['hip_R']['position'] = value
     # get the angles from the skeleton
     reba_data = skeleton_to_joints.convert_skel_to_joints(skel_data)
     # put fake values for the fake angles
