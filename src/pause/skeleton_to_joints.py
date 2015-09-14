@@ -172,19 +172,22 @@ def calculate_shoulder_angles(S_T_K, K_E, shoulder="left"):
     # first calculate the coordinate of the elbow in the shoulder frame
     P_E = np.concatenate((K_E,[[1]]),axis=0)
     S_E = np.dot(S_T_K,P_E)
-    # calculate the flexion (atan2(y/-z))
-    if S_E[1] == 0 and S_E[2] == 0:
-        flex = 0.0
+    epsilon = 0.01
+
+    # calculate the alpha angle (atan2(y/-z))
+    if abs(S_E[0]) <= epsilon and abs(S_E[2]) <= epsilon:
+        alpha = math.pi/2
     else:
-        if shoulder == "left":
-            flex = math.atan2(-S_E[1],-S_E[2])
-        else:
-            flex = math.atan2(S_E[1],-S_E[2])
-    # calculate the abduction (atan2(x/-z))
-    if S_E[0] == 0 and S_E[2] == 0:
-        abd = 0.0
+        alpha = math.atan2(S_E[0],-S_E[2])
+    # calculate the rotation beta (atan2(y/x))
+    if shoulder == "left":
+        beta = math.atan2(-S_E[1],S_E[0])
     else:
-        abd = math.atan2(S_E[0],-S_E[2])
+        beta = math.atan2(S_E[1],S_E[0])
+    # calculate the flexion and the abduction
+    flex = math.sin(beta)*alpha
+    abd = (1-math.sin(beta))*alpha
+    # return the angles converted in degrees
     return [rad_to_deg(flex),rad_to_deg(abd),0.]
     
 def calculate_elbow_angles(E_T_K, K_W):
@@ -227,61 +230,61 @@ def calculate_trunk_angles(T_T_K, K_SC):
 
 def save_log(skel_data, joints_data):
     log_data = {}
-    log_data["skeleton"] = skel_data
-    log_data["angles"] = joints_data
+    log_data['skeleton'] = skel_data
+    log_data['angles'] = joints_data
     with open('/tmp/pause_log.json', 'w') as outfile:
         json.dump(log_data, outfile, indent=4, sort_keys=True)
 
 def convert_skel_to_joints(skel_data):
     joints_data = {}
-    P_SC = np.array(skel_data["shoulder_C"]).reshape((3,1))
-    P_SL = np.array(skel_data["shoulder_L"]).reshape((3,1))
-    P_SR = np.array(skel_data["shoulder_R"]).reshape((3,1))
-    P_EL = np.array(skel_data["elbow_L"]).reshape((3,1))
-    P_ER = np.array(skel_data["elbow_R"]).reshape((3,1))
-    P_WL = np.array(skel_data["wrist_L"]).reshape((3,1))
-    P_WR = np.array(skel_data["wrist_R"]).reshape((3,1))
-    P_HL = np.array(skel_data["hand_L"]).reshape((3,1))
-    P_HR = np.array(skel_data["hand_R"]).reshape((3,1))
-    P_H = np.array(skel_data["head"]).reshape((3,1))
-    P_S = np.array(skel_data["spine"]).reshape((3,1))
-    P_HC = np.array(skel_data["hip_C"]).reshape((3,1))
-    P_HPL = np.array(skel_data["hip_L"]).reshape((3,1))
-    P_HPR = np.array(skel_data["hip_R"]).reshape((3,1))
+    P_SC = np.array(skel_data['shoulder_C']['position']).reshape((3,1))
+    P_SL = np.array(skel_data['shoulder_L']['position']).reshape((3,1))
+    P_SR = np.array(skel_data['shoulder_R']['position']).reshape((3,1))
+    P_EL = np.array(skel_data['elbow_L']['position']).reshape((3,1))
+    P_ER = np.array(skel_data['elbow_R']['position']).reshape((3,1))
+    P_WL = np.array(skel_data['wrist_L']['position']).reshape((3,1))
+    P_WR = np.array(skel_data['wrist_R']['position']).reshape((3,1))
+    P_HL = np.array(skel_data['hand_L']['position']).reshape((3,1))
+    P_HR = np.array(skel_data['hand_R']['position']).reshape((3,1))
+    P_H = np.array(skel_data['head']['position']).reshape((3,1))
+    P_S = np.array(skel_data['spine']['position']).reshape((3,1))
+    P_HC = np.array(skel_data['hip_C']['position']).reshape((3,1))
+    P_HPL = np.array(skel_data['hip_L']['position']).reshape((3,1))
+    P_HPR = np.array(skel_data['hip_R']['position']).reshape((3,1))
 
     ############ shoulder_L angles ##################
     S_T_K = get_shoulder_transformation(P_SL,P_SR,P_SC,"left")
-    joints_data["shoulder_L"] = calculate_shoulder_angles(S_T_K,P_EL,"left")
+    joints_data['shoulder_L'] = calculate_shoulder_angles(S_T_K,P_EL,"left")
     ############ shoulder_R angles ##################
     S_T_K = get_shoulder_transformation(P_SL,P_SR,P_SC,"right")
-    joints_data["shoulder_R"] = calculate_shoulder_angles(S_T_K,P_ER,"right")
+    joints_data['shoulder_R'] = calculate_shoulder_angles(S_T_K,P_ER,"right")
     ############ elbow_L angles ###################
     E_T_K = get_elbow_transformation(P_SL,P_EL,P_WL)
-    joints_data["elbow_L"] = calculate_elbow_angles(E_T_K,P_WL)
+    joints_data['elbow_L'] = calculate_elbow_angles(E_T_K,P_WL)
     ############ elbow_R angles ###################
     E_T_K = get_elbow_transformation(P_SR,P_ER,P_WR)
-    joints_data["elbow_R"] = calculate_elbow_angles(E_T_K,P_WR)
+    joints_data['elbow_R'] = calculate_elbow_angles(E_T_K,P_WR)
     ############ wrist_L angles ###################
     W_T_K = get_wrist_transformation(P_EL,P_WL,P_HL)
-    joints_data["wrist_L"] = calculate_wrist_angles(W_T_K,P_HL)
+    joints_data['wrist_L'] = calculate_wrist_angles(W_T_K,P_HL)
     ############ wrist_R angles ###################
     W_T_K = get_wrist_transformation(P_ER,P_WR,P_HR)
-    joints_data["wrist_R"] = calculate_wrist_angles(W_T_K,P_HR)
+    joints_data['wrist_R'] = calculate_wrist_angles(W_T_K,P_HR)
     ############ neck angles ###################
     N_T_K = get_neck_transformation(P_SL,P_SR,P_SC)
-    joints_data["neck"] = calculate_neck_angles(N_T_K,P_H)
+    joints_data['neck'] = calculate_neck_angles(N_T_K,P_H)
     ############ trunk angles ###################
     T_T_K = get_trunk_transformation(P_S,P_HC,P_HPL,P_HPR)
-    joints_data["trunk"] = calculate_trunk_angles(T_T_K,P_SC)
+    joints_data['trunk'] = calculate_trunk_angles(T_T_K,P_SC)
 
     ########### legs angles ####################
-    joints_data["leg_L"] = [0,1]
-    joints_data["leg_R"] = [0,1]
+    joints_data['leg_L'] = [0,1]
+    joints_data['leg_R'] = [0,1]
 
     ########## load and dynamic ################
-    joints_data["load"] = 0
-    joints_data["static"] = 0
-    joints_data["high_dynamic"] = 0 
+    joints_data['load'] = 0
+    joints_data['static'] = 0
+    joints_data['high_dynamic'] = 0 
 
     # save the log file
     save_log(skel_data,joints_data)

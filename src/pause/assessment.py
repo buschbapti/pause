@@ -1,13 +1,14 @@
 import numpy as np
 from collections import deque
 import json
+import os.path
 
 class Assessment(object):
     def __init__(self,window_size):
-        self.window_size = window_size
-        self.window_score = deque(maxlen=window_size)
         # initialize the reba table
         self.reba_table_init()
+        # initialize the logger dict
+        self.reba_logger_init(window_size)
 
     def reba_table_init(self):
         # group A table
@@ -34,21 +35,50 @@ class Assessment(object):
         self.reba_C_table[10] = [11,11,11,11,12,12,12,12,12,12,12,12]
         self.reba_C_table[11] = [12,12,12,12,12,12,12,12,12,12,12,12]
 
+    def reba_logger_init(self, window_size):
+        # create the map of deque the reba score 
+        self.reba_log = {}
+        self.reba_log["neck"] = deque(maxlen=window_size)
+        self.reba_log["shoulders"] = deque(maxlen=window_size)
+        self.reba_log["elbows"] = deque(maxlen=window_size)
+        self.reba_log["wrists"] = deque(maxlen=window_size)
+        self.reba_log["trunk"] = deque(maxlen=window_size)
+        self.reba_log["legs"] = deque(maxlen=window_size)
+        self.reba_log["groupA"] = deque(maxlen=window_size)
+        self.reba_log["groupB"] = deque(maxlen=window_size)
+        self.reba_log["reba"] = deque(maxlen=window_size)      
+
+    def save_score(self, key, score):
+        self.reba_log[key].append(score)
+        # calculate the windowed score
+        w_score = sum(self.reba_log[key])/len(self.reba_log[key])
+        self.reba_log[key+"_windowed"] = w_score
+
+    def windowed_score(self, key):
+        return self.reba_log[key+"_windowed"]
+
     def assess(self,data,method='reba',epsilon=5):
         if method == 'reba':
             score = self.reba_assess(data,epsilon)
-        self.window_score.append(score)
         return score
 
-    def eval_score(self):
-        return np.sum(self.window_score)/len(self.window_score)
+    def serialize_logger(self):
+        data = {}
+        keys = ['neck','shoulders','elbows','wrists','trunk','legs','groupA','groupB','reba']
+        for k in keys:
+            data[k] = list(self.reba_log[k])
+            data[k+'_windowed'] = self.reba_log[k+'_windowed']
+        return data
 
-    def save_log(self, score, group):
+    def save_log(self):
         # read the json file score
-        with open('/tmp/pause_log.json') as data_file:
-            log_data = json.load(data_file)
+        if os.path.isfile('/tmp/pause_log.json'):
+            with open('/tmp/pause_log.json') as data_file:
+                log_data = json.load(data_file)
+        else:
+            log_data = {}    
         # append the score
-        log_data[group] = score
+        log_data["reba_asses"] = self.serialize_logger()
         with open('/tmp/pause_log.json', 'w') as outfile:
             json.dump(log_data, outfile, indent=4, sort_keys=True)
 
@@ -100,12 +130,10 @@ class Assessment(object):
             elif data["load"] > 10:
                 score += 2
             # write the log
-            log_score = {}
-            log_score["trunk"] = trunk_score
-            log_score["neck"] = neck_score
-            log_score["legs"] = legs_score
-            log_score["A_score"] = score
-            self.save_log(log_score,'groupA')
+            self.save_score("trunk",trunk_score)
+            self.save_score("neck",neck_score)
+            self.save_score("legs",legs_score)
+            self.save_score("groupA",score)
             # return the score
             return score
         # group B score calculation (shoulders,elbows,wrists)
@@ -147,12 +175,10 @@ class Assessment(object):
             # return the score
             score = self.reba_B_table[elbows_score-1,shoulders_score-1,wrists_score-1]
             # write the log
-            log_score = {}
-            log_score["shoulders"] = shoulders_score
-            log_score["elbows"] = elbows_score
-            log_score["wrists"] = wrists_score
-            log_score["B_score"] = score
-            self.save_log(log_score,'groupB')
+            self.save_score("shoulders",shoulders_score)
+            self.save_score("elbows",elbows_score)
+            self.save_score("wrists",wrists_score)
+            self.save_score("groupB",score)
             # return the score
             return score
         # first get A and B score
@@ -164,7 +190,8 @@ class Assessment(object):
         if data["static"] or data["high_dynamic"]:
             reba_score += 1
         # save the log
-        self.save_log(reba_score,"REBA")
+        self.save_score("reba",reba_score)
+        self.save_log()
         # return reba score
         return reba_score
 
